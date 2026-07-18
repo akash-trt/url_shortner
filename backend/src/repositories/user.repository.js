@@ -1,14 +1,42 @@
 import User from "../models/User.js";
 
-export const create = (data) => User.create(data);
+class UserRepository {
 
-export const findByEmail = (email) =>
-    User.findOne({ email });
+    async create(userData) {
+        return await User.create(userData);
+    }
 
-export const findById = (id) =>
-    User.findById(id);
+    async findByEmail(email) {
+        return await User.findOne({ email });
+    }
 
+    async findById(id) {
+        return await User.findById(id);
+    }
 
+    async findByRefreshToken(refreshToken) {
+        return User.findOne({ refreshToken });
+    }
 
+    async updateRefreshToken(userId, refreshToken) {
+        return User.findByIdAndUpdate(
+            userId,
+            {
+                refreshToken,
+            },
+            {
+                new: true,
+            }
+        );
+    }
+    async removeRefreshToken(userId) {
+        return await User.findByIdAndUpdate(
+            userId,
+            {
+                refreshToken: null,
+            }
+        );
+    }
+}
 
-
+export default new UserRepository();

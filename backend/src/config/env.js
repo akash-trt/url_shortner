@@ -20,10 +20,16 @@ requiredEnv.forEach((key) => {
     }
 });
 
-export const env = {
-    PORT: process.env.PORT,
+export const env = Object.freeze({
+    PORT: Number(process.env.PORT),
+
+    NODE_ENV: process.env.NODE_ENV,
+
     MONGO_URI: process.env.MONGO_URI,
+
     REDIS_URL: process.env.REDIS_URL,
+    REDIS_URL_CACHE_TTL: Number(process.env.REDIS_URL_CACHE_TTL || 86400),
+
     BASE_URL: process.env.BASE_URL,
 
     JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
@@ -31,6 +37,4 @@ export const env = {
 
     ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY,
     REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY,
-
-    NODE_ENV: process.env.NODE_ENV,
-};
+});

@@ -1,0 +1,250 @@
+{
+  "info": {
+    "_postman_id": "7d4fdd59-4d56-48c1-a48d-9d4d74a8d001",
+    "name": "URL Shortener - URL APIs",
+    "description": "URL Shortener CRUD and Redirect APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "urlId",
+      "value": ""
+    },
+    {
+      "key": "shortCode",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Create Short URL",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"longUrl\": \"https://www.google.com\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/urls",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "urls"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let json = pm.response.json();",
+              "if(json.data){",
+              "pm.collectionVariables.set('urlId', json.data._id);",
+              "pm.collectionVariables.set('shortCode', json.data.shortCode);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get My URLs",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/urls?page=1&limit=10",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "urls"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get URL By ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/urls/{{urlId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "urls",
+            "{{urlId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Update URL",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"longUrl\": \"https://chat.openai.com\",\n    \"status\": \"ACTIVE\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/urls/{{urlId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "urls",
+            "{{urlId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Delete URL",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/urls/{{urlId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "urls",
+            "{{urlId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Redirect URL",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "http://localhost:5000/{{shortCode}}",
+          "host": [
+            "http://localhost:5000"
+          ],
+          "path": [
+            "{{shortCode}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create URL With Expiry",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"longUrl\": \"https://github.com\",\n    \"expiresAt\": \"2027-12-31T23:59:59.000Z\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/urls",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "urls"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Disable URL",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"status\": \"DISABLED\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/urls/{{urlId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "urls",
+            "{{urlId}}"
+          ]
+        }
+      }
+    }
+  ]
+}

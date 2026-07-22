@@ -3,11 +3,12 @@ import redisCounterService from "./redis-counter.service.js";
 import cacheService from "./cache.service.js";
 
 import { URL_STATUS } from "../models/Url.js";
-import  ApiError  from "../utils/ApiError.js";
-import {isExpired,toUrlResponse,} from "../utils/url.util.js";
+import ApiError from "../utils/ApiError.js";
+import { isExpired, toUrlResponse } from "../utils/url.util.js";
+import { analyticsProducer } from "../queues/index.js";
 
 class UrlService {
-    async create({owner,longUrl,customAlias,expiresAt, }) {
+    async create({ owner, longUrl, customAlias, expiresAt }) {
         let shortCode;
         let isCustomAlias = false;
 
@@ -41,13 +42,13 @@ class UrlService {
         return toUrlResponse(url);
     }
 
-    async resolve(shortCode) {
+    async resolve(shortCode, analytics = {}) {
         let url = await cacheService.getUrl(shortCode);
 
         if (!url) {
             url = await urlRepository.findByShortCode(
                 shortCode,
-                "shortCode longUrl status expiresAt createdAt updatedAt"
+                "shortCode longUrl status expiresAt createdAt updatedAt owner"
             );
 
             if (!url) {
@@ -59,28 +60,48 @@ class UrlService {
 
         this.#validateAccessibility(url);
 
+        try {
+            await analyticsProducer.trackClick({
+                url: url._id,
+                ...analytics,
+                clickedAt: new Date(),
+            });
+        } catch (error) {
+            console.error(
+                "Failed to enqueue analytics job:",
+                error
+            );
+        }
+
         return url;
     }
 
-    async getById(id, ownerId) {
-        const url = await urlRepository.findByIdAndOwner(
-            id,
-            ownerId
-        );
+    async #getOwnedUrl(shortCode, ownerId) {
+        const url = await urlRepository.findByShortCode(shortCode);
 
         if (!url) {
             throw new ApiError(404, "URL not found.");
         }
+
+        if (String(url.owner) !== String(ownerId)) {
+            throw new ApiError(
+                403,
+                "You are not authorized to access this URL."
+            );
+        }
+
+        return url;
+    }
+
+    async getByShortCode(shortCode, ownerId) {
+        const url = await this.#getOwnedUrl(shortCode, ownerId);
 
         return toUrlResponse(url);
     }
 
     async getUserUrls(ownerId, page = 1, limit = 20) {
         const [urls, total] = await Promise.all([
-            urlRepository.findByOwner(ownerId, {
-                page,
-                limit,
-            }),
+            urlRepository.findByOwner(ownerId, { page, limit }),
             urlRepository.countByOwner(ownerId),
         ]);
 
@@ -92,13 +113,14 @@ class UrlService {
         };
     }
 
-    async update(id, ownerId, updates) {
-        const url =
-            await urlRepository.updateByOwner(
-                id,
-                ownerId,
-                updates
-            );
+    async update(shortCode, ownerId, updates) {
+        const existing = await this.#getOwnedUrl(shortCode, ownerId);
+
+        const url = await urlRepository.updateByOwner(
+            existing._id,
+            ownerId,
+            updates
+        );
 
         if (!url) {
             throw new ApiError(404, "URL not found.");
@@ -109,12 +131,13 @@ class UrlService {
         return toUrlResponse(url);
     }
 
-    async delete(id, ownerId) {
-        const url =
-            await urlRepository.softDeleteByOwner(
-                id,
-                ownerId
-            );
+    async delete(shortCode, ownerId) {
+        const existing = await this.#getOwnedUrl(shortCode, ownerId);
+
+        const url = await urlRepository.softDeleteByOwner(
+            existing._id,
+            ownerId
+        );
 
         if (!url) {
             throw new ApiError(404, "URL not found.");
@@ -126,6 +149,8 @@ class UrlService {
     async #warmCache(url) {
         try {
             await cacheService.setUrl(url.shortCode, {
+                _id: url._id,
+                shortCode: url.shortCode,
                 longUrl: url.longUrl,
                 status: url.status,
                 expiresAt: url.expiresAt,

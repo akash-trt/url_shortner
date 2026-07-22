@@ -18,15 +18,20 @@ class UrlController {
 
     resolve = asyncHandler(async (req, res) => {
         const url = await urlService.resolve(
-            req.params.shortCode
+            req.params.shortCode,
+            {
+                ip: req.ip,
+                userAgent: req.get("User-Agent"),
+                referrer: req.get("Referer") || null,
+            }
         );
 
         return res.redirect(302, url.longUrl);
     });
 
-    getById = asyncHandler(async (req, res) => {
-        const url = await urlService.getById(
-            req.params.id,
+    getByShortCode = asyncHandler(async (req, res) => {
+        const url = await urlService.getByShortCode(
+            req.params.shortCode,
             req.user.id
         );
 
@@ -47,7 +52,7 @@ class UrlController {
 
     update = asyncHandler(async (req, res) => {
         const url = await urlService.update(
-            req.params.id,
+            req.params.shortCode,
             req.user.id,
             req.body
         );
@@ -61,7 +66,7 @@ class UrlController {
 
     delete = asyncHandler(async (req, res) => {
         await urlService.delete(
-            req.params.id,
+            req.params.shortCode,
             req.user.id
         );
 

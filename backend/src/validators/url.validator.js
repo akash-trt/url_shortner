@@ -62,11 +62,11 @@ export const updateUrlSchema = z
     );
 
 export const getUrlSchema = z.object({
-    id: objectId,
+    shortCode: z.string().min(1),
 });
 
 export const deleteUrlSchema = z.object({
-    id: objectId,
+    shortCode: z.string().min(1),
 });
 
 export const resolveUrlSchema = z.object({

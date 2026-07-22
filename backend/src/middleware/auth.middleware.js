@@ -15,7 +15,9 @@ export const protect = asyncHandler(async (req, res, next) => {
     const token = authHeader.split(" ")[1];
 
     const decoded = verifyAccessToken(token);
-
+    if(!decoded || !decoded.userId) {
+        throw new ApiError(401, "Invalid token or token expired");
+    }
     const user = await userRepository.findById(decoded.userId);
 
     if (!user) {

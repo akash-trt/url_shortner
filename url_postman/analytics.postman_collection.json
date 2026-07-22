@@ -1,0 +1,106 @@
+{
+  "info": {
+    "_postman_id": "8d5a5b16-2c21-4b83-bf62-analytics",
+    "name": "URL Shortener - Analytics APIs",
+    "description": "Analytics API endpoints for URL Shortener",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "urlId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Total Clicks",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/urls/{{urlId}}/clicks/count",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "urls",
+            "{{urlId}}",
+            "clicks",
+            "count"
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Recent Clicks",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/urls/{{urlId}}/clicks?limit=20",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "urls",
+            "{{urlId}}",
+            "clicks"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "20"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Analytics Summary",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/urls/{{urlId}}/analytics",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "urls",
+            "{{urlId}}",
+            "analytics"
+          ]
+        }
+      }
+    }
+  ]
+}

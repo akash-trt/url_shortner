@@ -76,6 +76,23 @@ class UrlController {
             "URL deleted successfully."
         );
     });
+
+    generateQRCode = asyncHandler(async (req, res) => {
+        console.log(req.params.shortCode);
+        const qr = await urlService.generateQRCode(
+            req.params.shortCode,
+            req.user.id
+        );
+
+        res.setHeader("Content-Type", "image/png");
+
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="${req.params.shortCode}.png"`
+        );
+
+        return res.send(qr);
+    });
 }
 
 export default new UrlController();

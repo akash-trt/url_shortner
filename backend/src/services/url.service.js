@@ -1,7 +1,9 @@
 import urlRepository from "../repositories/url.repository.js";
 import redisCounterService from "./redis-counter.service.js";
 import cacheService from "./cache.service.js";
+import QRCode from "qrcode";
 
+import {env} from "../config/env.js";
 import { URL_STATUS } from "../models/Url.js";
 import ApiError from "../utils/ApiError.js";
 import { isExpired, toUrlResponse } from "../utils/url.util.js";
@@ -97,6 +99,21 @@ class UrlService {
         const url = await this.#getOwnedUrl(shortCode, ownerId);
 
         return toUrlResponse(url);
+    }
+
+    async generateQRCode(shortCode, ownerId) {
+        const url = await this.#getOwnedUrl(shortCode, ownerId);
+
+        this.#validateAccessibility(url);
+
+        const shortUrl = `${env.BASE_URL}/${shortCode}`;
+
+        return QRCode.toBuffer(shortUrl, {
+            type: "png",
+            width: 500,
+            margin: 2,
+            errorCorrectionLevel: "H",
+        });
     }
 
     async getUserUrls(ownerId, page = 1, limit = 20) {

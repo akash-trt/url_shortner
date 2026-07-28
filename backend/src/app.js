@@ -16,8 +16,7 @@ app.get("/health", (req, res) => {
     const mongo =
         mongoose.connection.readyState === 1 ? "UP" : "DOWN";
 
-    const redis =
-        redisClient.isReady ? "UP" : "DOWN";
+    const redis = redisClient.isReady ? "UP" : "DOWN";
 
     res.json({
         status: "UP",

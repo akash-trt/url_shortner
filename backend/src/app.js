@@ -1,5 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import { redisClient } from "./config/redis.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -8,6 +9,11 @@ import redirectRoutes from "./routes/redirect.routes.js";
 import errorHandler from "./middleware/error.middleware.js";
 const app = express();
 
+app.use(
+  cors({
+    origin: true,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

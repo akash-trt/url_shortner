@@ -26,7 +26,7 @@ class UrlController {
             }
         );
 
-        return res.redirect(302, url.longUrl);
+        return res.redirect(302, url.url);
     });
 
     getByShortCode = asyncHandler(async (req, res) => {

@@ -48,16 +48,23 @@ class UrlService {
         let url = await cacheService.getUrl(shortCode);
 
         if (!url) {
-            url = await urlRepository.findByShortCode(
-                shortCode,
-                "shortCode longUrl status expiresAt createdAt updatedAt owner"
-            );
+            const dbUrl = await urlRepository.findByShortCode(
+            shortCode,
+            "_id shortCode longUrl status expiresAt"
+        );
 
-            if (!url) {
-                throw new ApiError(404, "Short URL not found.");
-            }
+        if (!dbUrl) {
+            throw new ApiError(404, "Short URL not found.");
+        }
 
-            await this.#warmCache(url);
+        url = {
+            _id: dbUrl._id,
+            url: dbUrl.longUrl,
+            status: dbUrl.status,
+            exp: dbUrl.expiresAt,
+        };
+
+        await this.#warmCache(dbUrl);
         }
 
         this.#validateAccessibility(url);
@@ -167,10 +174,9 @@ class UrlService {
         try {
             await cacheService.setUrl(url.shortCode, {
                 _id: url._id,
-                shortCode: url.shortCode,
-                longUrl: url.longUrl,
+                url: url.longUrl,
                 status: url.status,
-                expiresAt: url.expiresAt,
+                exp: url.expiresAt,
             });
         } catch (_) {}
     }

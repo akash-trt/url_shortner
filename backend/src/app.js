@@ -14,6 +14,8 @@ app.use(
     origin: true,
   })
 );
+
+app.set("trust proxy", true);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

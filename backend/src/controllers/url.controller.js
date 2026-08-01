@@ -17,14 +17,15 @@ class UrlController {
     });
 
     resolve = asyncHandler(async (req, res) => {
-        const url = await urlService.resolve(
-            req.params.shortCode,
-            {
-                ip: req.ip,
-                userAgent: req.get("User-Agent"),
-                referrer: req.get("Referer") || null,
-            }
-        );
+        const ip =
+            req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+            req.ip;
+
+        const url = await urlService.resolve(req.params.shortCode, {
+            ip,
+            userAgent: req.get("User-Agent"),
+            referrer: req.get("Referer") || null,
+        });
 
         return res.redirect(302, url.url);
     });

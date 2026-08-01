@@ -12,10 +12,13 @@ class AnalyticsService {
 
         let country = null;
         let city = null;
+        
+        const normalizedIp = ip?.replace(/^::ffff:/, "");
 
-        const lookupIp = ["::1", "127.0.0.1"].includes(ip)
-            ? "8.8.8.8"
-            : ip;
+        const lookupIp =
+            ["::1", "127.0.0.1"].includes(normalizedIp)
+                ? "8.8.8.8"
+                : normalizedIp;
 
         try {
 

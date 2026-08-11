@@ -9,11 +9,9 @@ import ApiError from "../utils/ApiError.js";
 import { isExpired, toUrlResponse } from "../utils/url.util.js";
 import { analyticsProducer } from "../queues/index.js";
 
-const DEFAULT_EXPIRY_DAYS = 90;
-
 function getDefaultExpiryDate() {
     const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + DEFAULT_EXPIRY_DAYS);
+    expiryDate.setSeconds(expiryDate.getSeconds() + env.REDIS_URL_CACHE_TTL);
     return expiryDate;
 }
 
@@ -44,35 +42,73 @@ class UrlService {
             longUrl,
             customAlias: isCustomAlias,
             status: URL_STATUS.ACTIVE,
-            expiresAt: expiresAt || getDefaultExpiryDate(),
+            expiresAt: expiresAt ? new Date(expiresAt) : getDefaultExpiryDate(),
         });
 
-        await this.#warmCache(url);
+        await cacheService.cacheUrl(url);
 
         return toUrlResponse(url);
     }
 
     async resolve(shortCode, analytics = {}) {
         let url = await cacheService.getUrl(shortCode);
+        let lockToken = null;
 
-        if (!url) {
-            const dbUrl = await urlRepository.findByShortCode(
-            shortCode,
-            "_id shortCode longUrl status expiresAt"
-        );
+        if (!url || !this.#isCacheUrlValid(url)) {
+            if (url) {
+                await cacheService.deleteUrl(shortCode);
+            }
 
-        if (!dbUrl) {
-            throw new ApiError(404, "Short URL not found.");
-        }
+            lockToken = await cacheService.acquireResolveLock(shortCode);
 
-        url = {
-            _id: dbUrl._id,
-            url: dbUrl.longUrl,
-            status: dbUrl.status,
-            exp: dbUrl.expiresAt,
-        };
+            if (!lockToken) {
+                url = await cacheService.waitForUrl(shortCode);
 
-        await this.#warmCache(dbUrl);
+                if (url && this.#isCacheUrlValid(url)) {
+                    this.#validateAccessibility(url);
+
+                    try {
+                        await analyticsProducer.trackClick({
+                            url: url._id,
+                            ...analytics,
+                            clickedAt: new Date(),
+                        });
+                    } catch (error) {
+                        console.error(
+                            "Failed to enqueue analytics job:",
+                            error
+                        );
+                    }
+
+                    return url;
+                }
+            }
+
+            try {
+                url = await cacheService.getUrl(shortCode);
+
+                if (!url || !this.#isCacheUrlValid(url)) {
+                    const dbUrl = await urlRepository.findByShortCode(
+                        shortCode,
+                        "_id shortCode longUrl status expiresAt"
+                    );
+
+                    if (!dbUrl) {
+                        throw new ApiError(404, "Short URL not found.");
+                    }
+
+                    url = {
+                        _id: dbUrl._id,
+                        url: dbUrl.longUrl,
+                        status: dbUrl.status,
+                        expiresAt: dbUrl.expiresAt,
+                    };
+
+                    await cacheService.cacheUrl(dbUrl);
+                }
+            } finally {
+                await cacheService.releaseResolveLock(shortCode, lockToken);
+            }
         }
 
         this.#validateAccessibility(url);
@@ -158,7 +194,7 @@ class UrlService {
             throw new ApiError(404, "URL not found.");
         }
 
-        await this.#warmCache(url);
+        await cacheService.cacheUrl(url);
 
         return toUrlResponse(url);
     }
@@ -178,15 +214,11 @@ class UrlService {
         await cacheService.deleteUrl(url.shortCode);
     }
 
-    async #warmCache(url) {
-        try {
-            await cacheService.setUrl(url.shortCode, {
-                _id: url._id,
-                url: url.longUrl,
-                status: url.status,
-                expiresAt: url.expiresAt,
-            });
-        } catch (_) {}
+    #isCacheUrlValid(url) {
+        return (
+            url.status === URL_STATUS.ACTIVE &&
+            !isExpired(url)
+        );
     }
 
     #validateAccessibility(url) {

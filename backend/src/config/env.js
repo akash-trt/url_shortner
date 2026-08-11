@@ -28,7 +28,7 @@ export const env = Object.freeze({
     MONGO_URI: process.env.MONGO_URI,
 
     REDIS_URL: process.env.REDIS_URL,
-    REDIS_URL_CACHE_TTL: Number(process.env.REDIS_URL_CACHE_TTL || 50400),
+    REDIS_URL_CACHE_TTL: Number(process.env.REDIS_URL_CACHE_TTL || 86400),
 
     BASE_URL: process.env.BASE_URL,
 

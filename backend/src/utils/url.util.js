@@ -2,11 +2,13 @@ import { URL_STATUS } from "../models/Url.js";
 import {env} from "../config/env.js";
 
 export function isExpired(url) {
-    if (!url.expiresAt) {
+    const expiresAt = url.expiresAt || url.exp;
+
+    if (!expiresAt) {
         return false;
     }
 
-    return new Date(url.expiresAt) <= new Date();
+    return new Date(expiresAt) <= new Date();
 }
 
 export function isAccessible(url) {

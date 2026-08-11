@@ -30,7 +30,13 @@ class CacheService {
             return null;
         }
 
-        return JSON.parse(value);
+        const url = JSON.parse(value);
+
+        if (!url.expiresAt && url.exp) {
+            url.expiresAt = url.exp;
+        }
+
+        return url;
     }
 
     async deleteUrl(shortCode) {

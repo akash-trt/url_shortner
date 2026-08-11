@@ -9,6 +9,14 @@ import ApiError from "../utils/ApiError.js";
 import { isExpired, toUrlResponse } from "../utils/url.util.js";
 import { analyticsProducer } from "../queues/index.js";
 
+const DEFAULT_EXPIRY_DAYS = 90;
+
+function getDefaultExpiryDate() {
+    const expiryDate = new Date();
+    expiryDate.setDate(expiryDate.getDate() + DEFAULT_EXPIRY_DAYS);
+    return expiryDate;
+}
+
 class UrlService {
     async create({ owner, longUrl, customAlias, expiresAt }) {
         let shortCode;
@@ -36,7 +44,7 @@ class UrlService {
             longUrl,
             customAlias: isCustomAlias,
             status: URL_STATUS.ACTIVE,
-            expiresAt,
+            expiresAt: expiresAt || getDefaultExpiryDate(),
         });
 
         await this.#warmCache(url);
@@ -176,7 +184,7 @@ class UrlService {
                 _id: url._id,
                 url: url.longUrl,
                 status: url.status,
-                exp: url.expiresAt,
+                expiresAt: url.expiresAt,
             });
         } catch (_) {}
     }

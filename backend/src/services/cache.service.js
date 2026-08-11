@@ -1,9 +1,16 @@
 import { redisClient } from "../config/redis.js";
 import { env } from "../config/env.js";
 import { randomUUID } from "crypto";
-import { computeUrlCacheTtlSeconds } from "../utils/cache.util.js";
-
+ modified:   frontend/src/features/links/components/LinkStatusBadge.jsx
 const URL_PREFIX = "url:";
+
+export function computeUrlCacheTtlSeconds(expiresAt, now = Date.now()) {
+    if (!expiresAt) {
+        return Number(env.REDIS_URL_CACHE_TTL);
+    }
+
+    return Math.ceil((new Date(expiresAt).getTime() - now) / 1000);
+}
 
 class CacheService {
     buildUrlKey(shortCode) {
@@ -25,11 +32,7 @@ class CacheService {
 
     async setUrl(shortCode, data, expiresAt) {
         const key = this.buildUrlKey(shortCode);
-        const ttlSeconds = computeUrlCacheTtlSeconds(
-            expiresAt,
-            Date.now(),
-            Number(env.REDIS_URL_CACHE_TTL)
-        );
+        const ttlSeconds = computeUrlCacheTtlSeconds(expiresAt);
 
         if (ttlSeconds !== null && ttlSeconds <= 0) {
             await redisClient.del(key);

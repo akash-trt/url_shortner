@@ -29,7 +29,11 @@ export default defineConfig(({ mode }) => {
     },
 
     preview: {
-      allowedHosts: ['gourl-zcwj.onrender.com'],
+      allowedHosts: [
+        'gourl-zcwj.onrender.com',
+        'goourl.in',
+        'www.goourl.in',
+      ],
     },
   }
 })

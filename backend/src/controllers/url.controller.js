@@ -30,6 +30,20 @@ class UrlController {
         return res.redirect(302, url.url);
     });
 
+    resolveJson = asyncHandler(async (req, res) => {
+        const ip =
+            req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
+            req.ip;
+
+        const url = await urlService.resolve(req.params.shortCode, {
+            ip,
+            userAgent: req.get("User-Agent"),
+            referrer: req.get("Referer") || null,
+        });
+
+        return res.json({ longUrl: url.url });
+    });
+
     getByShortCode = asyncHandler(async (req, res) => {
         const url = await urlService.getByShortCode(
             req.params.shortCode,

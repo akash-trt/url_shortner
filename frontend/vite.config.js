@@ -34,6 +34,12 @@ export default defineConfig(({ mode }) => {
         'goourl.in',
         'www.goourl.in',
       ],
+      proxy: {
+        '/api': {
+          target: env.VITE_BACKEND_URL || 'http://localhost:8000',
+          changeOrigin: true,
+        },
+      },
     },
   }
 })

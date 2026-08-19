@@ -17,6 +17,7 @@ import DomainsPage from "@/pages/dashboard/DomainsPage";
 import TeamsPage from "@/pages/dashboard/TeamsPage";
 import SettingsPage from "@/pages/dashboard/SettingsPage";
 import NotFoundPage from "@/pages/NotFoundPage";
+import RedirectHandler from "@/pages/RedirectHandler";
 
 export const router = createBrowserRouter([
   {
@@ -56,5 +57,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  { path: "/:shortCode", element: <RedirectHandler /> },
   { path: "*", element: <NotFoundPage /> },
 ]);

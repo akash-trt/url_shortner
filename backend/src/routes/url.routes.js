@@ -19,6 +19,7 @@ import {
 
 const router = Router();
 
+router.get("/resolve/:shortCode", urlController.resolveJson);// above protection to allow public access for resolving URLs
 router.use(protect);
 
 router.post("/",createUrlLimiter, validate(createUrlSchema), urlController.create);
@@ -27,7 +28,6 @@ router.get("/:shortCode", validateParams(getUrlSchema), urlController.getByShort
 router.patch("/:shortCode", validate(updateUrlSchema), urlController.update);
 router.delete("/:shortCode", validateParams(deleteUrlSchema), urlController.delete);
 router.get("/:shortCode/qr",urlController.generateQRCode);
-router.get("/resolve/:shortCode", urlController.resolveJson);
 
 router.get("/:shortCode/clicks/count", analyticsController.totalClicks);
 router.get("/:shortCode/clicks", analyticsController.recentClicks);

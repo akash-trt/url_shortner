@@ -134,7 +134,7 @@ export default function LinkDetailPage() {
                 href={link.shortUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="truncate font-mono text-[13.5px] text-ink-700 hover:underline"
+                className="block min-w-0 truncate font-mono text-[13.5px] text-ink-700 hover:underline"
               >
                 {link.shortUrl}
               </a>
@@ -190,7 +190,7 @@ export default function LinkDetailPage() {
                   href={link.longUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="truncate text-[13.5px] text-ink-700 hover:text-ink-950 hover:underline"
+                  className="block min-w-0 truncate text-[13.5px] text-ink-700 hover:text-ink-950 hover:underline"
                 >
                   {link.longUrl}
                 </a>
@@ -252,7 +252,7 @@ export default function LinkDetailPage() {
 
       <Modal isOpen={qrOpen} onClose={() => setQrOpen(false)} title={`QR — ${link.shortCode}`}>
         <div className="flex justify-center">
-          <QrCodePreview shortCode={link.shortCode} />
+          <QrCodePreview shortCode={link.shortCode} shortUrl={link.shortUrl} />
         </div>
       </Modal>
 

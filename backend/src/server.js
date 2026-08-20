@@ -13,7 +13,7 @@ const startServer = async () => {
 
         await redisCounterService.initializeCounter();
 
-        // Start BullMQ worker
+        // // Start BullMQ worker
         // await import("./workers/analytics.worker.js");
 
         console.log("🚀 Analytics Worker Started");

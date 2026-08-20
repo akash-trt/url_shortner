@@ -29,7 +29,17 @@ export default defineConfig(({ mode }) => {
     },
 
     preview: {
-      allowedHosts: ['gourl-zcwj.onrender.com'],
+      allowedHosts: [
+        'gourl-zcwj.onrender.com',
+        'goourl.in',
+        'www.goourl.in',
+      ],
+      proxy: {
+        '/api': {
+          target: env.VITE_BACKEND_URL || 'http://localhost:8000',
+          changeOrigin: true,
+        },
+      },
     },
   }
 })

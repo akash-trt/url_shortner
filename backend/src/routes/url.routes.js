@@ -19,6 +19,7 @@ import {
 
 const router = Router();
 
+router.get("/resolve/:shortCode", urlController.resolveJson);// above protection to allow public access for resolving URLs
 router.use(protect);
 
 router.post("/",createUrlLimiter, validate(createUrlSchema), urlController.create);

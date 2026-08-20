@@ -18,6 +18,7 @@ const COLORS = {
   inkText: "#47443d",
   inkMuted: "#6f6b62",
   flame: "#ff5a2e",
+  flameDeep: "#e8481f",
 };
 
 async function buildBanner(qrObjectUrl, shortUrl) {
@@ -34,7 +35,7 @@ async function buildBanner(qrObjectUrl, shortUrl) {
 
   const scale = 2;
   const W = 560;
-  const H = 720;
+  const H = 740;
   const canvas = document.createElement("canvas");
   canvas.width = W * scale;
   canvas.height = H * scale;
@@ -45,43 +46,51 @@ async function buildBanner(qrObjectUrl, shortUrl) {
   ctx.fillStyle = COLORS.paper;
   ctx.fillRect(0, 0, W, H);
 
+  // Top accent bar — flame gradient
+  const barGradient = ctx.createLinearGradient(0, 0, W, 0);
+  barGradient.addColorStop(0, COLORS.flame);
+  barGradient.addColorStop(1, COLORS.flameDeep);
+  ctx.fillStyle = barGradient;
+  ctx.fillRect(0, 0, W, 6);
+
   // Wordmark
   ctx.fillStyle = COLORS.inkNight;
-  ctx.font = "700 30px Archivo, sans-serif";
+  ctx.font = "700 32px Archivo, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("GOURL", W / 2, 76);
+  ctx.fillText("GOURL", W / 2, 86);
 
-  // Flame accent dot next to wordmark
-  ctx.beginPath();
+  // Small accent pill under wordmark instead of a dot — reads cleaner
+  const pillW = 28;
   ctx.fillStyle = COLORS.flame;
-  ctx.arc(W / 2 + 78, 66, 5, 0, Math.PI * 2);
+  roundRect(ctx, W / 2 - pillW / 2, 98, pillW, 4, 2);
   ctx.fill();
 
   // Tagline
   const tagline = TAGLINES[Math.floor(Math.random() * TAGLINES.length)];
   ctx.fillStyle = COLORS.inkMuted;
-  ctx.font = "500 16px Inter, sans-serif";
-  ctx.fillText(tagline, W / 2, 108);
+  ctx.font = "500 15px Inter, sans-serif";
+  ctx.fillText(tagline, W / 2, 128);
 
   // QR card with signature hard-shadow
   const cardSize = 340;
   const cardX = (W - cardSize) / 2;
-  const cardY = 150;
+  const cardY = 168;
   const offset = 8;
+  const radius = 20;
 
   ctx.fillStyle = COLORS.inkNight;
-  roundRect(ctx, cardX + offset, cardY + offset, cardSize, cardSize, 16);
+  roundRect(ctx, cardX + offset, cardY + offset, cardSize, cardSize, radius);
   ctx.fill();
 
   ctx.fillStyle = COLORS.paperCard;
-  roundRect(ctx, cardX, cardY, cardSize, cardSize, 16);
+  roundRect(ctx, cardX, cardY, cardSize, cardSize, radius);
   ctx.fill();
   ctx.strokeStyle = COLORS.inkNight;
   ctx.lineWidth = 2;
-  roundRect(ctx, cardX, cardY, cardSize, cardSize, 16);
+  roundRect(ctx, cardX, cardY, cardSize, cardSize, radius);
   ctx.stroke();
 
-  const qrPad = 28;
+  const qrPad = 30;
   ctx.drawImage(
     qrImg,
     cardX + qrPad,
@@ -92,12 +101,12 @@ async function buildBanner(qrObjectUrl, shortUrl) {
 
   // Short URL
   ctx.fillStyle = COLORS.inkText;
-  ctx.font = "600 18px 'JetBrains Mono', monospace";
-  ctx.fillText(shortUrl, W / 2, cardY + cardSize + offset + 56);
+  ctx.font = "600 19px 'JetBrains Mono', monospace";
+  ctx.fillText(shortUrl, W / 2, cardY + cardSize + offset + 58);
 
   ctx.fillStyle = COLORS.inkMuted;
   ctx.font = "400 13px Inter, sans-serif";
-  ctx.fillText("Shorter links. Bigger impact.", W / 2, cardY + cardSize + offset + 82);
+  ctx.fillText("Shorter links. Bigger impact.", W / 2, cardY + cardSize + offset + 84);
 
   return new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
 }
@@ -158,25 +167,26 @@ export function QrCodePreview({ shortCode, shortUrl }) {
   }, [shortCode, shortUrl]);
 
   const handleShare = async () => {
-    if (canShare && bannerBlob) {
-      const file = new File([bannerBlob], `${shortCode}.png`, { type: "image/png" });
-      const shareData = {
-        title: "GoURL",
-        text: `Check this out — ${shortUrl}`,
-        url: shortUrl,
-      };
+    if (!canShare) return;
 
-      try {
-        if (navigator.canShare?.({ files: [file] })) {
-          await navigator.share({ ...shareData, files: [file] });
-        } else {
-          await navigator.share(shareData);
+    // Only ever pass ONE representation of the link — some share targets
+    // (WhatsApp included) append `url` on its own line even when it's
+    // already embedded in `text`, which duplicates it in the message.
+    const shareData = bannerBlob
+      ? {
+          title: "GoURL",
+          text: `Check this out — ${shortUrl}`,
+          files: [new File([bannerBlob], `${shortCode}.png`, { type: "image/png" })],
         }
-      } catch {
-        // user cancelled the share sheet — no-op
+      : { title: "GoURL", text: `Check this out — ${shortUrl}` };
+
+    try {
+      if (shareData.files && !navigator.canShare?.({ files: shareData.files })) {
+        delete shareData.files;
       }
-    } else {
-      copy(shortUrl);
+      await navigator.share(shareData);
+    } catch {
+      // user cancelled the share sheet — no-op
     }
   };
 
@@ -213,13 +223,9 @@ export function QrCodePreview({ shortCode, shortUrl }) {
           <Download size={14} />
           Download
         </Button>
-        <Button variant="secondary" size="sm" onClick={handleShare}>
-          {canShare ? (
-            <>
-              <Share2 size={14} />
-              Share
-            </>
-          ) : copied ? (
+
+        <Button variant="secondary" size="sm" onClick={() => copy(shortUrl)}>
+          {copied ? (
             <>
               <Check size={14} className="text-moss-600" />
               Copied
@@ -231,6 +237,13 @@ export function QrCodePreview({ shortCode, shortUrl }) {
             </>
           )}
         </Button>
+
+        {canShare && (
+          <Button variant="secondary" size="sm" onClick={handleShare}>
+            <Share2 size={14} />
+            Share
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { LinkOff, Clock, ShieldAlert, SearchX } from "lucide-react";
+import { Unplug, Clock, ShieldAlert, SearchX } from "lucide-react";
 
 const STATUS_META = {
   404: {
@@ -19,7 +19,7 @@ const STATUS_META = {
     body: "It was flagged and is no longer accessible.",
   },
   default: {
-    icon: LinkOff,
+    icon: Unplug,
     title: "Something went wrong",
     body: "We couldn't resolve this link. Please try again in a moment.",
   },

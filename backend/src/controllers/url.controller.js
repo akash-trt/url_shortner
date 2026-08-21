@@ -35,6 +35,8 @@ class UrlController {
             req.headers["x-forwarded-for"]?.split(",")[0].trim() ||
             req.ip;
 
+        res.set("Cache-Control", "no-store");
+
         const url = await urlService.resolve(req.params.shortCode, {
             ip,
             userAgent: req.get("User-Agent"),
